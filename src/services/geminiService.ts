@@ -19,9 +19,11 @@ const RESPONSE_SCHEMA = {
           id: { type: Type.STRING },
           title: { type: Type.STRING },
           content: { type: Type.STRING },
-          fact: { type: Type.STRING }
+          fact: { type: Type.STRING },
+          summary: { type: Type.STRING },
+          reinforcement: { type: Type.STRING }
         },
-        required: ["id", "title", "content"]
+        required: ["id", "title", "content", "summary", "reinforcement"]
       }
     },
     intermittentQuizzes: {
@@ -84,7 +86,7 @@ export async function generateLearningContent(
     2. REWRITE each node's content specifically for the ${config.name} persona. 
        - Use analogies relevant to them.
        - Keep it grounded in the PDF facts (NO HALLUCINATIONS).
-    3. ADD a "Did you know?" fun fact for each node.
+    3. ADD a "Did you know?" fun fact, a 2-sentence "Summary", and a 1-sentence "Reinforcement" reminder for each node.
     4. GENERATE intermittent quizzes: For every node cluster, create a 3-question "Check-in" quiz.
     5. GENERATE a "Final Mastery Check": A 5-10 question comprehensive assessment covering all nodes.
 

@@ -10,6 +10,8 @@ export interface LearningNode {
   title: string;
   content: string;
   fact?: string; // "Did you know?"
+  summary?: string; // Short summary
+  reinforcement?: string; // One-liner reminder for later
 }
 
 export interface QuizQuestion {
@@ -31,12 +33,12 @@ export const PERSONA_CONFIG = {
     ageRange: '6-12',
     theme: 'emerald',
     icon: 'Baby',
-    description: 'Gamified, simple vocabulary, focus on fun facts.',
+    description: 'Adventure-ready learning! Simple words, big fun facts, and magic analogies.',
     styleMatrix: {
-      tone: 'Exciting and playful',
-      analogies: 'Magic, animals, adventures',
-      vocabulary: 'Grade school (7th grade level max)',
-      pacing: 'Fast with frequent rewards'
+      tone: 'Super exciting and playful!',
+      analogies: 'Magic, superheroes, and space adventures',
+      vocabulary: 'Super simple (Grade school level)',
+      pacing: 'Fast! Frequent rewards and high-fives'
     }
   },
   TEENAGERS: {
@@ -44,12 +46,12 @@ export const PERSONA_CONFIG = {
     ageRange: '13-19',
     theme: 'indigo',
     icon: 'Zap',
-    description: 'Relatable, fast-paced, modern analogies.',
+    description: 'Level up your knowledge! Fast-paced, snackable content with viral analogies.',
     styleMatrix: {
-      tone: 'Casual and energetic',
-      analogies: 'Social media, gaming, viral trends',
-      vocabulary: 'Current slang and tech-terms',
-      pacing: 'Snackable with social competition'
+      tone: 'Casual, energetic, and total vibe',
+      analogies: 'Gaming, social media trends, and life hacks',
+      vocabulary: 'Modern, tech-savvy, and relatable',
+      pacing: 'Snackable bursts of pure knowledge'
     }
   },
   ADULTS: {
@@ -57,12 +59,12 @@ export const PERSONA_CONFIG = {
     ageRange: '20-60',
     theme: 'slate',
     icon: 'Briefcase',
-    description: 'Efficiency-focused, professional, practical.',
+    description: 'Master the document in record time. Professional, sharp, and results-driven.',
     styleMatrix: {
-      tone: 'Analytical and direct',
-      analogies: 'Career growth, productivity, ROI',
-      vocabulary: 'Professional and technical',
-      pacing: 'Efficient and structured'
+      tone: 'Analytical, punchy, and direct',
+      analogies: 'Productivity hacks, ROI, and career growth',
+      vocabulary: 'Sharp, professional, and technical',
+      pacing: 'Efficient and hyper-structured'
     }
   },
   SENIORS: {
@@ -70,12 +72,12 @@ export const PERSONA_CONFIG = {
     ageRange: '60+',
     theme: 'amber',
     icon: 'Scroll',
-    description: 'Clear, patient, focus on cognitive retention.',
+    description: 'Timeless wisdom meets modern tech. Patient, crystal clear, and rewarding.',
     styleMatrix: {
-      tone: 'Respectful and calm',
-      analogies: 'Historical context, wisdom, legacy',
-      vocabulary: 'Standard, clear, no jargon',
-      pacing: 'Steady and reinforcing'
+      tone: 'Respectful, calm, and deeply engaging',
+      analogies: 'Historical parallels and enduring wisdom',
+      vocabulary: 'Crystal clear and jargon-free',
+      pacing: 'Steady, reinforcing, and satisfying'
     }
   }
 };

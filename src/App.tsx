@@ -76,14 +76,39 @@ export default function App() {
   const [currentNodeIndex, setCurrentNodeIndex] = useState(0);
   const [currentView, setCurrentView] = useState<'CONTENT' | 'FACT' | 'QUIZ' | 'FINAL' | 'COMPLETE'>('CONTENT');
   const [quizScore, setQuizScore] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const isTextMeaningful = (text: string): boolean => {
+    const trimmed = text.trim();
+    // Check for minimum length
+    if (trimmed.length < 50) return false;
+    
+    // Check for alphanumeric content ratio (avoids purely symbolic or empty PDFs)
+    const alphanumericCount = (trimmed.match(/[a-z0-9]/gi) || []).length;
+    if (alphanumericCount / trimmed.length < 0.2) return false;
+    
+    // Check for minimum word count
+    const words = trimmed.split(/\s+/).filter(w => w.length > 0);
+    if (words.length < 10) return false;
+
+    return true;
+  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !selectedPersona) return;
 
+    setErrorMessage(null);
     setIsProcessing(true);
     try {
       const text = await extractTextFromPDF(file);
+      
+      if (!isTextMeaningful(text)) {
+        setErrorMessage("This PDF does not contain meaningful content. Please upload a textbook, research paper, or guide.");
+        setIsProcessing(false);
+        return;
+      }
+
       const module = await generateLearningContent(text, selectedPersona);
       setLearningModule(module);
       setStep(3);
@@ -160,8 +185,8 @@ export default function App() {
               className="max-w-4xl mx-auto"
             >
               <div className="text-center mb-12">
-                <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tight">Select Learning Persona</h2>
-                <p className="text-slate-500 text-lg">We'll tailor vocabulary, analogies, and pacing to match.</p>
+                <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tight">Ready for a Learning Superpower?</h2>
+                <p className="text-slate-500 text-lg">Pick your vibe below and we'll transform your PDF into pure gold!</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -217,10 +242,23 @@ export default function App() {
                 <p className="text-slate-500 mb-10 text-lg leading-relaxed">
                   Upload your textbook, research paper, or guide.<br/> We'll distill it into high-value knowledge nodes.
                 </p>
+
+                <AnimatePresence>
+                  {errorMessage && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mb-6 p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 text-sm font-bold"
+                    >
+                      {errorMessage}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
                 
                 <label className="relative cursor-pointer inline-block">
-                  <div className="px-12 py-5 bg-indigo-600 text-white rounded-2xl font-bold shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all text-lg">
-                    {isProcessing ? 'Analyzing Complexity...' : 'Scan Document'}
+                  <div className="px-12 py-5 bg-indigo-600 text-white rounded-2xl font-bold shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all text-lg hover:scale-105">
+                    {isProcessing ? 'Summoning AI Genius...' : 'Start the Magic Scan'}
                   </div>
                   <input 
                     type="file" 
@@ -298,7 +336,7 @@ export default function App() {
                     >
                       <div className="mb-8">
                         <span className="bg-indigo-50 text-indigo-600 text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-[0.2em]">
-                          Module Deep-Dive
+                          Knowledge Mission
                         </span>
                         <h2 className="text-4xl font-black mt-4 text-slate-900 tracking-tight leading-tight">
                           {learningModule.nodes[currentNodeIndex].title}
@@ -313,9 +351,9 @@ export default function App() {
 
                       <button 
                         onClick={nextNode}
-                        className="mt-12 w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-indigo-100 hover:translate-y-[-2px] transition-all"
+                        className="mt-12 w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-indigo-100 hover:translate-y-[-2px] hover:shadow-indigo-200 transition-all"
                       >
-                        Launch Check-in Quiz
+                        I'm Ready for the Challenge!
                       </button>
                     </motion.div>
                   )}
@@ -338,17 +376,17 @@ export default function App() {
                       <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent" />
                       <div className="relative z-10">
                         <div className="mx-auto w-24 h-24 bg-white text-slate-900 rounded-[32px] flex items-center justify-center mb-8 rotate-3 shadow-2xl">
-                          <Rocket size={48} />
+                          <Rocket size={48} className="animate-bounce" />
                         </div>
-                        <h2 className="text-5xl font-black mb-6 tracking-tight">Mastery Finalized!</h2>
+                        <h2 className="text-5xl font-black mb-6 tracking-tight">Mission Accomplished!</h2>
                         <p className="text-slate-400 text-xl font-medium max-w-sm mx-auto mb-10 leading-relaxed">
-                          Your cognitive score is trending high. Optimized for {PERSONA_CONFIG[selectedPersona!].name} learning style.
+                          You've totally crushed this document! You're now a certified expert in the {PERSONA_CONFIG[selectedPersona!].name} squad!
                         </p>
                         <button 
                           onClick={() => window.location.reload()}
-                          className="px-12 py-5 bg-indigo-600 text-white rounded-2xl font-black text-lg shadow-2xl shadow-indigo-900/50 hover:bg-indigo-500 transition-all"
+                          className="px-12 py-5 bg-indigo-600 text-white rounded-2xl font-black text-lg shadow-2xl shadow-indigo-900/50 hover:bg-indigo-500 hover:scale-105 transition-all"
                         >
-                          Scan New Document
+                          Conquer Another Document
                         </button>
                       </div>
                     </motion.div>
@@ -416,6 +454,35 @@ export default function App() {
                     </div>
                   </div>
                 </div>
+
+                {/* Reinforced Learning (Previous Topics) */}
+                {currentNodeIndex > 0 && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="p-6 bg-indigo-50 border border-indigo-100 rounded-[24px]"
+                  >
+                    <h4 className="text-[9px] font-black text-indigo-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                       <Zap size={12} /> Don't Forget
+                    </h4>
+                    <p className="text-xs text-indigo-900 font-medium leading-relaxed italic">
+                      "{learningModule.nodes[currentNodeIndex - 1].reinforcement}"
+                    </p>
+                  </motion.div>
+                )}
+
+                {/* Node Summary */}
+                <motion.div 
+                  key={`summary-${currentNodeIndex}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-6 bg-slate-100 rounded-[24px] border border-slate-200"
+                >
+                  <h4 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Module Summary</h4>
+                  <p className="text-xs text-slate-700 leading-relaxed font-medium">
+                    {learningModule.nodes[currentNodeIndex].summary}
+                  </p>
+                </motion.div>
               </aside>
             </motion.div>
           )}
@@ -525,16 +592,16 @@ function QuizView({ questions, onComplete, isFinal }: { questions: any[], onComp
             <button 
               disabled={selectedOption === null}
               onClick={handleConfirm}
-              className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-bold shadow-xl shadow-indigo-100 hover:translate-y-[-2px] disabled:opacity-50 transition-all font-black"
+              className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-bold shadow-xl shadow-indigo-100 hover:translate-y-[-2px] hover:shadow-indigo-200 disabled:opacity-50 transition-all font-black"
             >
-              Verify Answer
+              Lock in My Answer!
             </button>
           ) : (
             <button 
               onClick={nextQuestion}
-              className="w-full py-5 bg-slate-900 text-white rounded-2xl font-bold shadow-xl shadow-slate-900/20 hover:translate-y-[-2px] transition-all font-black"
+              className="w-full py-5 bg-slate-900 text-white rounded-2xl font-bold shadow-xl shadow-slate-900/20 hover:translate-y-[-2px] hover:shadow-slate-800 transition-all font-black"
             >
-              {index < questions.length - 1 ? 'Next Knowledge Point' : isFinal ? 'Review Final Result' : 'Return to Modules'}
+              {index < questions.length - 1 ? 'Show Me More Key Facts!' : isFinal ? 'Calculate My Victory Score!' : 'Return to My Learning Mission'}
             </button>
           )}
         </div>
