@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   FileText, 
@@ -75,6 +75,7 @@ export default function App() {
   const [learningModule, setLearningModule] = useState<LearningModule | null>(null);
   const [currentNodeIndex, setCurrentNodeIndex] = useState(0);
   const [currentView, setCurrentView] = useState<'CONTENT' | 'FACT' | 'QUIZ' | 'FINAL' | 'COMPLETE'>('CONTENT');
+  const [nodeScores, setNodeScores] = useState<Record<number, number>>({});
   const [quizScore, setQuizScore] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -120,7 +121,7 @@ export default function App() {
     }
   };
 
-  const nextNode = () => {
+  const nextNode = (score?: number) => {
     if (!learningModule) return;
     
     if (currentView === 'CONTENT') {
@@ -137,6 +138,9 @@ export default function App() {
         }
       }
     } else if (currentView === 'QUIZ') {
+      if (score !== undefined) {
+        setNodeScores(prev => ({ ...prev, [currentNodeIndex]: score }));
+      }
       if (currentNodeIndex < learningModule.nodes.length - 1) {
         setCurrentNodeIndex(prev => prev + 1);
         setCurrentView('CONTENT');
@@ -295,7 +299,7 @@ export default function App() {
               className="grid grid-cols-12 gap-8 items-start"
             >
               {/* Left Column: Navigation Nodes */}
-              {currentView !== 'COMPLETE' && (
+              {currentView === 'CONTENT' && (
                 <aside className="col-span-12 lg:col-span-3 flex flex-col gap-6">
                   <div className="bg-white rounded-[32px] p-6 border border-slate-200 shadow-sm">
                     <h3 className="text-[10px] font-black mb-6 flex items-center gap-2 text-slate-400 uppercase tracking-[0.2em]">
@@ -339,7 +343,9 @@ export default function App() {
               {/* Main Column: Content/Quiz */}
               <section className={cn(
                 "col-span-12 flex flex-col gap-6",
-                currentView === 'COMPLETE' ? "lg:col-span-8 lg:col-start-3 mt-12" : "lg:col-span-6"
+                currentView === 'CONTENT' 
+                  ? "lg:col-span-6" 
+                  : "lg:col-span-8 lg:col-start-3"
               )}>
                 <AnimatePresence mode="wait">
                   {currentView === 'CONTENT' && (
@@ -398,12 +404,48 @@ export default function App() {
                         <p className="text-slate-400 text-2xl font-medium max-w-lg mx-auto mb-12 leading-relaxed">
                           You've totally crushed this document! You're now a certified expert in the {PERSONA_CONFIG[selectedPersona!].name} squad!
                         </p>
+
                         <button 
                           onClick={() => window.location.reload()}
-                          className="px-16 py-6 bg-indigo-600 text-white rounded-2xl font-black text-xl shadow-2xl shadow-indigo-900/50 hover:bg-indigo-500 hover:scale-105 transition-all"
+                          className="px-16 py-6 bg-indigo-600 text-white rounded-2xl font-black text-xl shadow-2xl shadow-indigo-900/50 hover:bg-indigo-500 hover:scale-105 transition-all mb-16"
                         >
                           Conquer Another Document
                         </button>
+
+                        <div className="max-w-md mx-auto text-left bg-white/5 p-10 rounded-[32px] border border-white/5 backdrop-blur-md">
+                          <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                            <CheckCircle2 size={14} /> Knowledge Mastery Report
+                          </h4>
+                          <ul className="space-y-4">
+                            {learningModule.nodes.map((node, i) => {
+                              const score = nodeScores[i];
+                              const total = learningModule.intermittentQuizzes?.[i]?.length || 0;
+                              const percentage = total > 0 ? Math.round(((score || 0) / total) * 100) : 100;
+                              
+                              return (
+                                <motion.li
+                                  initial={{ opacity: 0, x: -10 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: i * 0.1 + 0.5 }}
+                                  key={node.id}
+                                  className="flex items-center justify-between group"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full group-hover:scale-150 transition-transform" />
+                                    <span className="text-slate-300 font-bold text-sm tracking-tight">{node.title}</span>
+                                  </div>
+                                  <span className={cn(
+                                    "text-xs font-black px-3 py-1 rounded-lg uppercase tracking-widest",
+                                    percentage >= 80 ? "text-emerald-400 bg-emerald-400/10" : 
+                                    percentage >= 50 ? "text-amber-400 bg-amber-400/10" : "text-rose-400 bg-rose-400/10"
+                                  )}>
+                                    {percentage}%
+                                  </span>
+                                </motion.li>
+                              );
+                            })}
+                          </ul>
+                        </div>
                       </div>
                     </motion.div>
                   )}
@@ -411,7 +453,7 @@ export default function App() {
               </section>
 
               {/* Right Column: Facts & Mastery Metrics */}
-              {currentView !== 'COMPLETE' && (
+              {currentView === 'CONTENT' && (
                 <aside className="col-span-12 lg:col-span-3 flex flex-col gap-6">
                   {/* Fact Card */}
                   {learningModule.nodes[currentNodeIndex].fact && (
@@ -473,9 +515,15 @@ function QuizView({ questions = [], onComplete, isFinal }: { questions: any[], o
   const [index, setIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isConfirmed, setIsConfirmed] = useState(false);
-  const [score, setScore] = useState(0);
+  const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
 
   const currentQ = questions[index];
+
+  // Reset selection state whenever we move to a new question to prevent "already answered" bugs
+  useEffect(() => {
+    setSelectedOption(null);
+    setIsConfirmed(false);
+  }, [index]);
 
   if (!currentQ) {
     return (
@@ -494,18 +542,17 @@ function QuizView({ questions = [], onComplete, isFinal }: { questions: any[], o
 
   const handleConfirm = () => {
     if (selectedOption === currentQ.correctAnswer) {
-      setScore(s => s + 1);
+      setCorrectAnswersCount(prev => prev + 1);
     }
     setIsConfirmed(true);
   };
 
   const nextQuestion = () => {
     if (index < questions.length - 1) {
-      setIndex(i => i + 1);
-      setSelectedOption(null);
-      setIsConfirmed(false);
+      setIndex(prev => prev + 1);
     } else {
-      onComplete(isFinal ? (score + (selectedOption === currentQ.correctAnswer ? 1 : 0)) : undefined);
+      // Pass the most up-to-date score
+      onComplete(correctAnswersCount);
     }
   };
 

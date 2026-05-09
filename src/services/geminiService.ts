@@ -89,6 +89,7 @@ export async function generateLearningContent(
     3. ADD a "Did you know?" fun fact, a 2-sentence "Summary", and a 1-sentence "Reinforcement" reminder for each node.
     4. GENERATE intermittent quizzes: For EVERY individual node (major concept) extracted in step 1, create a corresponding 3-question "Check-in" quiz. The length of the 'intermittentQuizzes' array MUST match exactly the length of the 'nodes' array.
     5. GENERATE a "Final Mastery Check": A 5-10 question comprehensive assessment covering all nodes.
+    6. UNIQUENESS GUARANTEE: Every single question in the entire module MUST be unique. Do NOT repeat questions from the intermittent quizzes in the final assessment. Do NOT repeat questions within the same quiz. Every question should test a different facet or use a different phrasing of the core concepts.
 
     ### FORMATTING:
     - Return JSON matching the provided schema.
