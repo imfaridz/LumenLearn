@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Inter", sans-serif;
+  --color-indigo-soft: rgba(99, 102, 241, 0.1);
+  --color-glass: rgba(255, 255, 255, 0.9);
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-800 font-sans;
+  }
+}
+
+.glass {
+  background: var(--color-glass);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.persona-btn {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.node-active {
+  background: #6366f1;
+  color: white;
+  border-color: #4f46e5;
+}
+
+.progress-bar {
+  @apply h-2 w-full bg-slate-100 rounded-full overflow-hidden;
+}
+
+.progress-fill {
+  @apply h-full bg-indigo-500 rounded-full transition-all duration-500;
+}
+

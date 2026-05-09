@@ -1,0 +1,109 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { GoogleGenAI, Type } from "@google/genai";
+import { PersonaType, LearningModule, PERSONA_CONFIG } from "../types";
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+const RESPONSE_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    nodes: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          id: { type: Type.STRING },
+          title: { type: Type.STRING },
+          content: { type: Type.STRING },
+          fact: { type: Type.STRING }
+        },
+        required: ["id", "title", "content"]
+      }
+    },
+    intermittentQuizzes: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            question: { type: Type.STRING },
+            options: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING }
+            },
+            correctAnswer: { type: Type.INTEGER },
+            explanation: { type: Type.STRING }
+          },
+          required: ["question", "options", "correctAnswer", "explanation"]
+        }
+      }
+    },
+    finalAssessment: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          question: { type: Type.STRING },
+          options: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING }
+          },
+          correctAnswer: { type: Type.INTEGER },
+          explanation: { type: Type.STRING }
+        },
+        required: ["question", "options", "correctAnswer", "explanation"]
+      }
+    }
+  },
+  required: ["nodes", "intermittentQuizzes", "finalAssessment"]
+};
+
+export async function generateLearningContent(
+  text: string,
+  persona: PersonaType
+): Promise<LearningModule> {
+  const config = PERSONA_CONFIG[persona];
+  
+  const systemInstruction = `
+    You are an expert Educational Technologist specializing in adaptive learning.
+    Your goal is to transform the provided document text into an interactive learning module.
+
+    ### PERSONA TARGET: ${config.name} (${config.ageRange})
+    - Tone: ${config.styleMatrix.tone}
+    - Analogies: ${config.styleMatrix.analogies}
+    - Vocabulary: ${config.styleMatrix.vocabulary}
+    - Pacing: ${config.styleMatrix.pacing}
+
+    ### LOGIC FLOW:
+    1. EXTRACT 3-5 "High-Value Learning Nodes" (major concepts).
+    2. REWRITE each node's content specifically for the ${config.name} persona. 
+       - Use analogies relevant to them.
+       - Keep it grounded in the PDF facts (NO HALLUCINATIONS).
+    3. ADD a "Did you know?" fun fact for each node.
+    4. GENERATE intermittent quizzes: For every node cluster, create a 3-question "Check-in" quiz.
+    5. GENERATE a "Final Mastery Check": A 5-10 question comprehensive assessment covering all nodes.
+
+    ### FORMATTING:
+    - Return JSON matching the provided schema.
+    - Title each node clearly.
+    - Quizzes must have exactly 4 options.
+    - Explanations for quiz answers must be in the target persona's tone.
+  `;
+
+  const response = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: [{ role: "user", parts: [{ text }] }],
+    config: {
+      systemInstruction,
+      responseMimeType: "application/json",
+      responseSchema: RESPONSE_SCHEMA
+    }
+  });
+
+  return JSON.parse(response.text) as LearningModule;
+}

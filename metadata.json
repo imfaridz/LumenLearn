@@ -1,0 +1,10 @@
+{
+  "name": "Lumina: Adaptive Learning System",
+  "description": "An AI-powered document learning platform that adapts PDF content into interactive quizzes and summaries tailored for different age groups.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "PDF Parsing",
+    "Multi-Persona AI Adaptation",
+    "Interactive Learning"
+  ]
+}
