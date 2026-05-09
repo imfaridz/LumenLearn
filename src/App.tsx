@@ -124,7 +124,18 @@ export default function App() {
     if (!learningModule) return;
     
     if (currentView === 'CONTENT') {
-      setCurrentView('QUIZ');
+      const questions = learningModule.intermittentQuizzes?.[currentNodeIndex] || [];
+      if (questions.length > 0) {
+        setCurrentView('QUIZ');
+      } else {
+        // Skip quiz if missing and try to move to next node or final
+        if (currentNodeIndex < learningModule.nodes.length - 1) {
+          setCurrentNodeIndex(prev => prev + 1);
+          setCurrentView('CONTENT');
+        } else {
+          setCurrentView('FINAL');
+        }
+      }
     } else if (currentView === 'QUIZ') {
       if (currentNodeIndex < learningModule.nodes.length - 1) {
         setCurrentNodeIndex(prev => prev + 1);
@@ -284,47 +295,52 @@ export default function App() {
               className="grid grid-cols-12 gap-8 items-start"
             >
               {/* Left Column: Navigation Nodes */}
-              <aside className="col-span-12 lg:col-span-3 flex flex-col gap-6">
-                <div className="bg-white rounded-[32px] p-6 border border-slate-200 shadow-sm">
-                  <h3 className="text-[10px] font-black mb-6 flex items-center gap-2 text-slate-400 uppercase tracking-[0.2em]">
-                    <span className="w-1 h-4 bg-indigo-500 rounded-full"></span>
-                    Content Nodes
-                  </h3>
-                  <div className="flex flex-col gap-3">
-                    {learningModule.nodes.map((node, idx) => (
-                      <div 
-                        key={node.id}
-                        className={cn(
-                          "p-4 rounded-2xl border transition-all",
-                          idx === currentNodeIndex 
-                            ? "bg-indigo-600 border-indigo-700 text-white shadow-lg shadow-indigo-100" 
-                            : idx < currentNodeIndex 
-                              ? "bg-slate-50 border-slate-100 text-slate-400 opacity-60" 
-                              : "bg-white border-slate-100 text-slate-600"
-                        )}
-                      >
-                        <div className="flex justify-between text-[8px] font-black uppercase tracking-widest mb-1 mb-2 opacity-70">
-                          <span>0{idx + 1}</span>
-                          <span>{idx === currentNodeIndex ? 'Now Focusing' : idx < currentNodeIndex ? 'Completed' : 'Upcoming'}</span>
-                        </div>
-                        <span className="text-xs font-bold leading-tight block">{node.title}</span>
-                        {idx === currentNodeIndex && (
-                          <div className="h-1 w-full bg-indigo-400/30 rounded-full mt-3 overflow-hidden">
-                            <motion.div 
-                              className="h-full bg-white" 
-                              initial={{ width: 0 }}
-                              animate={{ width: currentView === 'QUIZ' ? '100%' : '50%' }}
-                            />
+              {currentView !== 'COMPLETE' && (
+                <aside className="col-span-12 lg:col-span-3 flex flex-col gap-6">
+                  <div className="bg-white rounded-[32px] p-6 border border-slate-200 shadow-sm">
+                    <h3 className="text-[10px] font-black mb-6 flex items-center gap-2 text-slate-400 uppercase tracking-[0.2em]">
+                      <span className="w-1 h-4 bg-indigo-500 rounded-full"></span>
+                      Content Nodes
+                    </h3>
+                    <div className="flex flex-col gap-3">
+                      {learningModule.nodes.map((node, idx) => (
+                        <div 
+                          key={node.id}
+                          className={cn(
+                            "p-4 rounded-2xl border transition-all",
+                            idx === currentNodeIndex 
+                              ? "bg-indigo-600 border-indigo-700 text-white shadow-lg shadow-indigo-100" 
+                              : idx < currentNodeIndex 
+                                ? "bg-slate-50 border-slate-100 text-slate-400 opacity-60" 
+                                : "bg-white border-slate-100 text-slate-600"
+                          )}
+                        >
+                          <div className="flex justify-between text-[8px] font-black uppercase tracking-widest mb-1 mb-2 opacity-70">
+                            <span>0{idx + 1}</span>
+                            <span>{idx === currentNodeIndex ? 'Now Focusing' : idx < currentNodeIndex ? 'Completed' : 'Upcoming'}</span>
                           </div>
-                        )}
-                      </div>
-                    ))}
+                          <span className="text-xs font-bold leading-tight block">{node.title}</span>
+                          {idx === currentNodeIndex && (
+                            <div className="h-1 w-full bg-indigo-400/30 rounded-full mt-3 overflow-hidden">
+                              <motion.div 
+                                className="h-full bg-white" 
+                                initial={{ width: 0 }}
+                                animate={{ width: currentView === 'QUIZ' ? '100%' : '50%' }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </aside>
+                </aside>
+              )}
 
               {/* Main Column: Content/Quiz */}
-              <section className="col-span-12 lg:col-span-6 flex flex-col gap-6">
+              <section className={cn(
+                "col-span-12 flex flex-col gap-6",
+                currentView === 'COMPLETE' ? "lg:col-span-8 lg:col-start-3 mt-12" : "lg:col-span-6"
+              )}>
                 <AnimatePresence mode="wait">
                   {currentView === 'CONTENT' && (
                     <motion.div 
@@ -358,33 +374,33 @@ export default function App() {
                     </motion.div>
                   )}
 
-                  {(currentView === 'QUIZ' || currentView === 'FINAL') && (
-                    <QuizView 
-                      questions={currentView === 'QUIZ' ? learningModule.intermittentQuizzes[currentNodeIndex] : learningModule.finalAssessment} 
-                      isFinal={currentView === 'FINAL'}
-                      onComplete={currentView === 'QUIZ' ? nextNode : handleFinalComplete}
-                    />
-                  )}
+                    {(currentView === 'QUIZ' || currentView === 'FINAL') && (
+                      <QuizView 
+                        questions={(currentView === 'QUIZ' ? learningModule.intermittentQuizzes?.[currentNodeIndex] : learningModule.finalAssessment) || []} 
+                        isFinal={currentView === 'FINAL'}
+                        onComplete={currentView === 'QUIZ' ? nextNode : handleFinalComplete}
+                      />
+                    )}
 
                   {currentView === 'COMPLETE' && (
                     <motion.div 
                       key="complete"
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="bg-slate-900 rounded-[40px] p-16 text-center text-white shadow-2xl relative overflow-hidden"
+                      className="bg-slate-900 rounded-[40px] p-24 text-center text-white shadow-2xl relative overflow-hidden"
                     >
                       <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent" />
                       <div className="relative z-10">
-                        <div className="mx-auto w-24 h-24 bg-white text-slate-900 rounded-[32px] flex items-center justify-center mb-8 rotate-3 shadow-2xl">
-                          <Rocket size={48} className="animate-bounce" />
+                        <div className="mx-auto w-32 h-32 bg-white text-slate-900 rounded-[32px] flex items-center justify-center mb-8 rotate-3 shadow-2xl">
+                          <Rocket size={64} className="animate-bounce" />
                         </div>
-                        <h2 className="text-5xl font-black mb-6 tracking-tight">Mission Accomplished!</h2>
-                        <p className="text-slate-400 text-xl font-medium max-w-sm mx-auto mb-10 leading-relaxed">
+                        <h2 className="text-6xl font-black mb-6 tracking-tight">Mission Accomplished!</h2>
+                        <p className="text-slate-400 text-2xl font-medium max-w-lg mx-auto mb-12 leading-relaxed">
                           You've totally crushed this document! You're now a certified expert in the {PERSONA_CONFIG[selectedPersona!].name} squad!
                         </p>
                         <button 
                           onClick={() => window.location.reload()}
-                          className="px-12 py-5 bg-indigo-600 text-white rounded-2xl font-black text-lg shadow-2xl shadow-indigo-900/50 hover:bg-indigo-500 hover:scale-105 transition-all"
+                          className="px-16 py-6 bg-indigo-600 text-white rounded-2xl font-black text-xl shadow-2xl shadow-indigo-900/50 hover:bg-indigo-500 hover:scale-105 transition-all"
                         >
                           Conquer Another Document
                         </button>
@@ -395,95 +411,55 @@ export default function App() {
               </section>
 
               {/* Right Column: Facts & Mastery Metrics */}
-              <aside className="col-span-12 lg:col-span-3 flex flex-col gap-6">
-                {/* Fact Card */}
-                {currentView !== 'COMPLETE' && learningModule.nodes[currentNodeIndex].fact && (
+              {currentView !== 'COMPLETE' && (
+                <aside className="col-span-12 lg:col-span-3 flex flex-col gap-6">
+                  {/* Fact Card */}
+                  {learningModule.nodes[currentNodeIndex].fact && (
+                    <motion.div 
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="p-8 bg-rose-50 rounded-[32px] border border-rose-100 relative overflow-hidden group shadow-sm shadow-rose-100"
+                    >
+                      <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-125 transition-transform duration-500">
+                        <Sparkles size={64} className="text-rose-900" />
+                      </div>
+                      <h4 className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-3">Did you know?</h4>
+                      <p className="text-base text-rose-900 font-bold leading-snug">
+                        {learningModule.nodes[currentNodeIndex].fact}
+                      </p>
+                    </motion.div>
+                  )}
+
+                  {/* Reinforced Learning (Previous Topics) */}
+                  {currentNodeIndex > 0 && (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="p-6 bg-indigo-50 border border-indigo-100 rounded-[24px]"
+                    >
+                      <h4 className="text-[9px] font-black text-indigo-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                         <Zap size={12} /> Don't Forget
+                      </h4>
+                      <p className="text-xs text-indigo-900 font-medium leading-relaxed italic">
+                        "{learningModule.nodes[currentNodeIndex - 1].reinforcement}"
+                      </p>
+                    </motion.div>
+                  )}
+
+                  {/* Node Summary */}
                   <motion.div 
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="p-8 bg-rose-50 rounded-[32px] border border-rose-100 relative overflow-hidden group shadow-sm shadow-rose-100"
+                    key={`summary-${currentNodeIndex}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-6 bg-slate-100 rounded-[24px] border border-slate-200"
                   >
-                    <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-125 transition-transform duration-500">
-                      <Sparkles size={64} className="text-rose-900" />
-                    </div>
-                    <h4 className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-3">Did you know?</h4>
-                    <p className="text-base text-rose-900 font-bold leading-snug">
-                      {learningModule.nodes[currentNodeIndex].fact}
+                    <h4 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Module Summary</h4>
+                    <p className="text-xs text-slate-700 leading-relaxed font-medium">
+                      {learningModule.nodes[currentNodeIndex].summary}
                     </p>
                   </motion.div>
-                )}
-
-                {/* Metrics Card */}
-                <div className="bg-white rounded-[32px] p-8 border border-slate-200 shadow-sm">
-                  <h3 className="text-[10px] font-black mb-10 flex items-center gap-2 text-slate-400 uppercase tracking-[0.2em]">
-                    <span className="w-1 h-4 bg-emerald-500 rounded-full"></span>
-                    Mastery Metrics
-                  </h3>
-                  <div className="flex flex-col items-center">
-                    <div className="relative w-32 h-32 flex items-center justify-center">
-                      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                        <path className="text-slate-100" stroke="currentColor" strokeWidth="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                        <motion.path 
-                          className="text-emerald-500" 
-                          stroke="currentColor" 
-                          strokeWidth="3" 
-                          strokeDasharray="100, 100" 
-                          strokeLinecap="round" 
-                          fill="none" 
-                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                          initial={{ strokeDasharray: "0, 100" }}
-                          animate={{ strokeDasharray: `${((currentNodeIndex + 1) / learningModule.nodes.length) * 100}, 100` }}
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-2xl font-black text-slate-900">
-                          {Math.round(((currentNodeIndex + 1) / learningModule.nodes.length) * 100)}%
-                        </span>
-                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Progress</span>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-8 w-full mt-10">
-                      <div className="text-center">
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Focus</p>
-                        <p className="text-xl font-black text-indigo-600">High</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Retention</p>
-                        <p className="text-xl font-black text-amber-500">82%</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Reinforced Learning (Previous Topics) */}
-                {currentNodeIndex > 0 && (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="p-6 bg-indigo-50 border border-indigo-100 rounded-[24px]"
-                  >
-                    <h4 className="text-[9px] font-black text-indigo-600 uppercase tracking-widest mb-3 flex items-center gap-2">
-                       <Zap size={12} /> Don't Forget
-                    </h4>
-                    <p className="text-xs text-indigo-900 font-medium leading-relaxed italic">
-                      "{learningModule.nodes[currentNodeIndex - 1].reinforcement}"
-                    </p>
-                  </motion.div>
-                )}
-
-                {/* Node Summary */}
-                <motion.div 
-                  key={`summary-${currentNodeIndex}`}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="p-6 bg-slate-100 rounded-[24px] border border-slate-200"
-                >
-                  <h4 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Module Summary</h4>
-                  <p className="text-xs text-slate-700 leading-relaxed font-medium">
-                    {learningModule.nodes[currentNodeIndex].summary}
-                  </p>
-                </motion.div>
-              </aside>
+                </aside>
+              )}
             </motion.div>
           )}
 
@@ -493,13 +469,28 @@ export default function App() {
   );
 }
 
-function QuizView({ questions, onComplete, isFinal }: { questions: any[], onComplete: (score?: any) => void, isFinal?: boolean }) {
+function QuizView({ questions = [], onComplete, isFinal }: { questions: any[], onComplete: (score?: any) => void, isFinal?: boolean }) {
   const [index, setIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [score, setScore] = useState(0);
 
   const currentQ = questions[index];
+
+  if (!currentQ) {
+    return (
+      <div className="bg-white rounded-[40px] border border-slate-200 shadow-xl p-10 flex flex-col items-center justify-center min-h-[300px]">
+        <h3 className="text-xl font-bold text-slate-800">Hang on, something is missing!</h3>
+        <p className="text-slate-500 mt-2 mb-6">We couldn't find questions for this section.</p>
+        <button 
+          onClick={() => onComplete()}
+          className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg"
+        >
+          Skip to Next Section
+        </button>
+      </div>
+    );
+  }
 
   const handleConfirm = () => {
     if (selectedOption === currentQ.correctAnswer) {

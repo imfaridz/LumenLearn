@@ -87,7 +87,7 @@ export async function generateLearningContent(
        - Use analogies relevant to them.
        - Keep it grounded in the PDF facts (NO HALLUCINATIONS).
     3. ADD a "Did you know?" fun fact, a 2-sentence "Summary", and a 1-sentence "Reinforcement" reminder for each node.
-    4. GENERATE intermittent quizzes: For every node cluster, create a 3-question "Check-in" quiz.
+    4. GENERATE intermittent quizzes: For EVERY individual node (major concept) extracted in step 1, create a corresponding 3-question "Check-in" quiz. The length of the 'intermittentQuizzes' array MUST match exactly the length of the 'nodes' array.
     5. GENERATE a "Final Mastery Check": A 5-10 question comprehensive assessment covering all nodes.
 
     ### FORMATTING:
