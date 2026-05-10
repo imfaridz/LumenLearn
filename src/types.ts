@@ -22,6 +22,7 @@ export interface QuizQuestion {
 }
 
 export interface LearningModule {
+  topic: string; // The general subject of the document
   nodes: LearningNode[];
   intermittentQuizzes: QuizQuestion[][]; // Index matches node clusters
   finalAssessment: QuizQuestion[];

@@ -11,6 +11,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const RESPONSE_SCHEMA = {
   type: Type.OBJECT,
   properties: {
+    topic: { type: Type.STRING },
     nodes: {
       type: Type.ARRAY,
       items: {
@@ -62,7 +63,7 @@ const RESPONSE_SCHEMA = {
       }
     }
   },
-  required: ["nodes", "intermittentQuizzes", "finalAssessment"]
+  required: ["topic", "nodes", "intermittentQuizzes", "finalAssessment"]
 };
 
 export async function generateLearningContent(
@@ -82,6 +83,7 @@ export async function generateLearningContent(
     - Pacing: ${config.styleMatrix.pacing}
 
     ### LOGIC FLOW:
+    0. IDENTIFY the core topic of the document (e.g., "Photosynthesis", "The Great Depression", "Python Basics").
     1. EXTRACT 3-5 "High-Value Learning Nodes" (major concepts).
     2. REWRITE each node's content specifically for the ${config.name} persona. 
        - Use analogies relevant to them.

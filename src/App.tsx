@@ -402,7 +402,7 @@ export default function App() {
                         </div>
                         <h2 className="text-6xl font-black mb-6 tracking-tight">Mission Accomplished!</h2>
                         <p className="text-slate-400 text-2xl font-medium max-w-lg mx-auto mb-12 leading-relaxed">
-                          You've totally crushed this document! You're now a certified expert in the {PERSONA_CONFIG[selectedPersona!].name} squad!
+                          You've totally crushed <span className="text-indigo-400 font-black">{learningModule.topic}</span>! You're now a certified expert and ready for your next big challenge.
                         </p>
 
                         <button 
