@@ -30,36 +30,117 @@ function cn(...inputs: ClassValue[]) {
 
 // --- Sub-components ---
 
-function PersonaCard({ persona, selected, onClick }: { persona: PersonaType, selected: boolean, onClick: () => void }) {
+function FloatingElements() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
+      {[...Array(6)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute text-indigo-500/30"
+          initial={{ 
+            x: Math.random() * 100 + "%", 
+            y: Math.random() * 100 + "%",
+            scale: Math.random() * 0.5 + 0.5,
+            rotate: 0
+          }}
+          animate={{ 
+            y: ["-10%", "110%"],
+            rotate: 360,
+          }}
+          transition={{ 
+            duration: Math.random() * 20 + 20, 
+            repeat: Infinity, 
+            ease: "linear",
+            delay: -Math.random() * 20
+          }}
+        >
+          <BrainCircuit size={Math.random() * 40 + 20} className="blur-[1px]" />
+        </motion.div>
+      ))}
+      {[...Array(4)].map((_, i) => (
+        <motion.div
+          key={`sparkle-${i}`}
+          className="absolute text-amber-400/20"
+          initial={{ 
+            x: Math.random() * 100 + "%", 
+            y: Math.random() * 100 + "%",
+            scale: 0
+          }}
+          animate={{ 
+            scale: [0, 1.2, 0],
+            opacity: [0, 1, 0]
+          }}
+          transition={{ 
+            duration: Math.random() * 5 + 5, 
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: Math.random() * 5
+          }}
+        >
+          <Sparkles size={Math.random() * 30 + 15} />
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+function PersonaCard({ persona, selected, onClick, index }: { persona: PersonaType, selected: boolean, onClick: () => void, index: number }) {
   const config = PERSONA_CONFIG[persona];
   const Icon = { Baby, Zap, Briefcase, Scroll }[config.icon as any] || BrainCircuit;
 
   return (
     <motion.button
-      whileHover={{ scale: 1.01 }}
-      whileTap={{ scale: 0.99 }}
+      initial={{ opacity: 0, scale: 0.8, y: 30 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ 
+        duration: 0.6, 
+        delay: index * 0.1,
+        type: "spring",
+        stiffness: 100
+      }}
+      whileHover={{ 
+        scale: 1.05,
+        y: -10,
+        backgroundColor: "rgba(248, 250, 252, 1)"
+      }}
+      whileTap={{ scale: 0.95 }}
       onClick={onClick}
       id={`persona-${persona.toLowerCase()}`}
       className={cn(
-        "persona-btn relative flex flex-col items-center p-8 rounded-[32px] border transition-all duration-300 text-center w-full",
+        "persona-btn relative flex flex-col items-center p-8 rounded-[32px] border transition-all duration-300 text-center w-full group",
         selected 
-          ? "bg-indigo-50 border-indigo-200 shadow-sm shadow-indigo-100 ring-2 ring-indigo-500 ring-offset-4" 
-          : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+          ? "bg-indigo-50 border-indigo-200 shadow-[0_20px_50px_rgba(79,70,229,0.15)] ring-2 ring-indigo-500 ring-offset-4" 
+          : "bg-white border-slate-200 hover:border-indigo-200 hover:shadow-xl hover:shadow-slate-200/50"
       )}
     >
+      {selected && (
+        <motion.div 
+          layoutId="highlight"
+          className="absolute inset-0 bg-indigo-500/5 rounded-[32px] -z-10"
+          initial={false}
+          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+        />
+      )}
+      
       <div className={cn(
-        "w-16 h-16 rounded-2xl mb-4 flex items-center justify-center shadow-lg transition-transform duration-300",
-        selected ? "bg-indigo-600 text-white scale-110" : "bg-slate-100 text-slate-400"
+        "w-16 h-16 rounded-2xl mb-4 flex items-center justify-center shadow-lg transition-all duration-500 relative",
+        selected ? "bg-indigo-600 text-white scale-110 rotate-3" : "bg-slate-100 text-slate-400 group-hover:rotate-6 group-hover:scale-110 group-hover:bg-indigo-50 group-hover:text-indigo-400"
       )}>
-        <Icon size={32} />
+        <Icon size={32} className={cn("transition-transform duration-500", !selected && "group-hover:animate-pulse")} />
+        {selected && (
+          <motion.div
+            layoutId="sparkle-glow"
+            className="absolute -inset-1 bg-indigo-600 blur-xl opacity-20 -z-10 rounded-3xl"
+          />
+        )}
       </div>
-      <h3 className={cn("text-xl font-bold mb-1", selected ? "text-indigo-900" : "text-slate-800")}>
+      <h3 className={cn("text-xl font-bold mb-1 transition-colors", selected ? "text-indigo-900" : "text-slate-800 group-hover:text-indigo-900")}>
         {config.name}
       </h3>
       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mb-3">
         {config.ageRange} Years
       </p>
-      <p className="text-sm text-slate-500 leading-relaxed max-w-[200px]">
+      <p className="text-sm text-slate-500 leading-relaxed max-w-[200px] transition-colors group-hover:text-slate-600">
         {config.description}
       </p>
     </motion.button>
@@ -194,34 +275,55 @@ export default function App() {
           {step === 1 && (
             <motion.div 
               key="step-1"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="max-w-4xl mx-auto"
+              className="max-w-5xl mx-auto relative px-4"
             >
-              <div className="text-center mb-12">
-                <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tight">Ready for a Learning Superpower?</h2>
-                <p className="text-slate-500 text-lg">Pick your vibe below and we'll transform your PDF into pure gold!</p>
+              <FloatingElements />
+              
+              <div className="text-center mb-16 relative z-10">
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                >
+                  <span className="inline-block px-4 py-1.5 bg-indigo-50 text-indigo-600 text-[10px] font-black rounded-full uppercase tracking-[0.3em] mb-6 border border-indigo-100">
+                    The Smart Adaptation Engine
+                  </span>
+                  <h2 className="text-5xl lg:text-6xl font-black text-slate-900 mb-6 tracking-tight leading-tight">
+                    Ready for a Learning <br />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-500">Superpower?</span>
+                  </h2>
+                  <p className="text-slate-500 text-xl font-medium max-w-2xl mx-auto">Pick your vibe below and we'll transform your document into pure gold!</p>
+                </motion.div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {(Object.keys(PERSONA_CONFIG) as PersonaType[]).map((p) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
+                {(Object.keys(PERSONA_CONFIG) as PersonaType[]).map((p, idx) => (
                   <PersonaCard 
                     key={p} 
                     persona={p} 
                     selected={selectedPersona === p}
+                    index={idx}
                     onClick={() => setSelectedPersona(p)}
                   />
                 ))}
               </div>
 
-              <div className="mt-12 flex justify-center">
+              <div className="mt-16 flex justify-center relative z-10">
                 <motion.button
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
                   disabled={!selectedPersona}
                   onClick={() => setStep(2)}
-                  className="group flex items-center gap-3 px-10 py-5 bg-indigo-600 text-white rounded-2xl font-bold shadow-xl shadow-indigo-200 hover:bg-indigo-700 disabled:opacity-50 disabled:grayscale transition-all"
+                  className="group relative flex items-center gap-4 px-12 py-6 bg-slate-900 text-white rounded-[24px] font-black text-lg shadow-xl shadow-slate-200 hover:bg-indigo-600 disabled:opacity-50 disabled:grayscale transition-all active:scale-95"
                 >
-                  Confirm Choice <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                  Confirm Choice 
+                  <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                    <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                  </div>
                 </motion.button>
               </div>
             </motion.div>
