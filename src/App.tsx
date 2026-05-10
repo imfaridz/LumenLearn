@@ -474,7 +474,7 @@ export default function App() {
                       </div>
 
                       <button 
-                        onClick={nextNode}
+                        onClick={() => nextNode()}
                         className="mt-12 w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-indigo-100 hover:translate-y-[-2px] hover:shadow-indigo-200 transition-all"
                       >
                         I'm Ready for the Challenge!
@@ -484,7 +484,11 @@ export default function App() {
 
                     {(currentView === 'QUIZ' || currentView === 'FINAL') && (
                       <QuizView 
-                        questions={(currentView === 'QUIZ' ? learningModule.intermittentQuizzes?.[currentNodeIndex] : learningModule.finalAssessment) || []} 
+                        questions={
+                          currentView === 'QUIZ' 
+                            ? (learningModule.intermittentQuizzes?.[currentNodeIndex] || []) 
+                            : learningModule.finalAssessment
+                        } 
                         isFinal={currentView === 'FINAL'}
                         onComplete={currentView === 'QUIZ' ? nextNode : handleFinalComplete}
                       />

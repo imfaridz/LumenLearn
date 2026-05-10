@@ -19,6 +19,7 @@ export interface QuizQuestion {
   options: string[];
   correctAnswer: number;
   explanation: string;
+  nodeTitle?: string; // Reference to the node this question relates to
 }
 
 export interface LearningModule {
