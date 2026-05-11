@@ -241,6 +241,21 @@ export default function App() {
     });
   };
 
+  const startNewMission = (changePersona = false) => {
+    setLearningModule(null);
+    setCurrentNodeIndex(0);
+    setCurrentView('CONTENT');
+    setNodeScores({});
+    setQuizScore(0);
+    setErrorMessage(null);
+    if (changePersona) {
+      setSelectedPersona(null);
+      setStep(1);
+    } else {
+      setStep(2);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 p-6">
       
@@ -511,12 +526,20 @@ export default function App() {
                           You've totally crushed <span className="text-indigo-400 font-black">{learningModule.topic}</span>! You're now a certified expert and ready for your next big challenge.
                         </p>
 
-                        <button 
-                          onClick={() => window.location.reload()}
-                          className="px-16 py-6 bg-indigo-600 text-white rounded-2xl font-black text-xl shadow-2xl shadow-indigo-900/50 hover:bg-indigo-500 hover:scale-105 transition-all mb-16"
-                        >
-                          Conquer Another Document
-                        </button>
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+                          <button 
+                            onClick={() => startNewMission(false)}
+                            className="w-full sm:w-auto px-12 py-6 bg-indigo-600 text-white rounded-2xl font-black text-xl shadow-2xl shadow-indigo-900/50 hover:bg-indigo-500 hover:scale-105 transition-all"
+                          >
+                            Conquer Another Document
+                          </button>
+                          <button 
+                            onClick={() => startNewMission(true)}
+                            className="w-full sm:w-auto px-12 py-6 bg-white/10 text-white rounded-2xl font-black text-xl border border-white/20 hover:bg-white/20 hover:scale-105 transition-all backdrop-blur-sm"
+                          >
+                            Change My Persona
+                          </button>
+                        </div>
 
                         <div className="max-w-md mx-auto text-left bg-white/5 p-10 rounded-[32px] border border-white/5 backdrop-blur-md">
                           <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
